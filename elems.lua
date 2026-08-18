@@ -10,5 +10,6 @@ loadstring(game:HttpGet(BASE_URL .. "keybind.lua"))()(Library)
 loadstring(game:HttpGet(BASE_URL .. "features.lua"))()(Library)
 loadstring(game:HttpGet(BASE_URL .. "circularselection.lua"))()(Library)
 loadstring(game:HttpGet(BASE_URL .. "popup.lua"))()(Library)
+loadstring(game:HttpGet(BASE_URL .. "infooverlay.lua"))()(Library)
 
 return Library
