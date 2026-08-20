@@ -129,7 +129,7 @@ return function(Library)
     end
 
     local function Base()
-        local Base = New("Frame", {Name = "Base", BackgroundTransparency = 1, BorderColor3 = Color3.fromRGB(27,42,53), BorderSizePixel = 1, Size = UDim2.fromOffset(150,300), ZIndex = 1})
+        local Base = New("Frame", {Name = "Base", BackgroundTransparency = 1, BorderColor3 = Color3.fromRGB(27,42,53), BorderSizePixel = 1, Size = UDim2.fromOffset(150,300), Visible = false, ZIndex = 1})
         local Pointer = New("ImageLabel", {Name = "pointer", AnchorPoint = Vector2.new(1,1), BackgroundTransparency = 1, BorderSizePixel = 0, Image = "rbxassetid://7160794204", Position = UDim2.fromOffset(30,30), Size = UDim2.fromOffset(40,40), Visible = false, ZIndex = 1}, Base)
         New("ImageLabel", {Name = "pointer", AnchorPoint = Vector2.new(.5,.5), BackgroundTransparency = 1, BorderSizePixel = 0, Image = "rbxassetid://7160794204", ImageColor3 = Color3.fromRGB(59,177,252), Position = UDim2.fromScale(.5,.5), Size = UDim2.new(1,15,1,15), ZIndex = -1}, Pointer)
         local Scale = New("UIScale", {Name = "UIScale", Scale = 1}, Base)
@@ -552,6 +552,7 @@ return function(Library)
                 math.clamp(X + 10, 0, math.max(0, Camera.ViewportSize.X - GuiInset.X - Size.X)),
                 math.clamp(Y + (Up and -10 or 10), 0, math.max(0, MaxY + (Up and Size.Y or -Size.Y)))
             )
+            if not Overlay.Visible then Overlay.Visible = true end
         end))
         return Overlay
     end
