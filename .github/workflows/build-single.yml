@@ -70,3 +70,4 @@ jobs:
           git add elems_single.lua
           git diff --cached --quiet || git commit -m "build single-file UILib"
           git push
+
