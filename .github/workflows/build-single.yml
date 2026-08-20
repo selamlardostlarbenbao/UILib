@@ -1,10 +1,10 @@
 name: Build single UILib
 
 on:
-  push:
+  pull_request:
     branches: [main]
     paths:
-      - .github/workflows/build-single.yml
+      - build-single.trigger
 
 permissions:
   contents: write
@@ -15,6 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
       - uses: actions/setup-python@v5
@@ -70,4 +71,3 @@ jobs:
           git add elems_single.lua
           git diff --cached --quiet || git commit -m "build single-file UILib"
           git push
-
