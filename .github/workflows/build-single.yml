@@ -1,0 +1,72 @@
+name: Build single UILib
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/build-single.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Merge current modules without changing their source
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          files = [
+              "uifactory.lua",
+              "guifx.lua",
+              "library.lua",
+              "keybind.lua",
+              "features.lua",
+              "circularselection.lua",
+              "popup.lua",
+              "infooverlay.lua",
+          ]
+
+          def quote(source):
+              for count in range(1, 32):
+                  equals = "=" * count
+                  close = "]" + equals + "]"
+                  if close not in source:
+                      return "[" + equals + "[" + source + close
+              raise RuntimeError("No safe Lua long-string delimiter found")
+
+          source = {name: Path(name).read_text(encoding="utf-8") for name in files}
+
+          out = []
+          out.append("local UIFactory = loadstring(" + quote(source["uifactory.lua"]) + ")()")
+          out.append("local GUIFX = loadstring(" + quote(source["guifx.lua"]) + ")()")
+          out.append("local CreateLibrary = loadstring(" + quote(source["library.lua"]) + ")()")
+          out.append("")
+          out.append("local Library = CreateLibrary(UIFactory, GUIFX)")
+          out.append("")
+          for name in ["keybind.lua", "features.lua", "circularselection.lua", "popup.lua", "infooverlay.lua"]:
+              out.append("loadstring(" + quote(source[name]) + ")()(Library)")
+          out.append("")
+          out.append("return Library")
+          out.append("")
+
+          Path("elems_single.lua").write_text("\n".join(out), encoding="utf-8")
+          PY
+
+      - name: Commit merged file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add elems_single.lua
+          git diff --cached --quiet || git commit -m "build single-file UILib"
+          git push
