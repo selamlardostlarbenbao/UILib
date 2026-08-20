@@ -1,0 +1,66 @@
+name: Build single UILib
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - build-single.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Merge current modules without changing source
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          files = [
+              "uifactory.lua",
+              "guifx.lua",
+              "library.lua",
+              "keybind.lua",
+              "features.lua",
+              "circularselection.lua",
+              "popup.lua",
+              "infooverlay.lua",
+          ]
+
+          def quote(source):
+              for count in range(1, 64):
+                  eq = "=" * count
+                  close = "]" + eq + "]"
+                  if close not in source:
+                      return "[" + eq + "[" + source + close
+              raise RuntimeError("no delimiter")
+
+          src = {name: Path(name).read_text(encoding="utf-8") for name in files}
+          out = [
+              "local UIFactory = loadstring(" + quote(src["uifactory.lua"]) + ")()",
+              "local GUIFX = loadstring(" + quote(src["guifx.lua"]) + ")()",
+              "local CreateLibrary = loadstring(" + quote(src["library.lua"]) + ")()",
+              "",
+              "local Library = CreateLibrary(UIFactory, GUIFX)",
+              "",
+          ]
+          for name in ["keybind.lua", "features.lua", "circularselection.lua", "popup.lua", "infooverlay.lua"]:
+              out.append("loadstring(" + quote(src[name]) + ")()(Library)")
+          out += ["", "return Library", ""]
+          Path("elems_single.lua").write_text("\n".join(out), encoding="utf-8")
+          PY
+
+      - name: Commit merged file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add elems_single.lua
+          git diff --cached --quiet || git commit -m "build single-file UILib"
+          git push
